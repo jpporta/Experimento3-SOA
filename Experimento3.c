@@ -154,6 +154,10 @@ int main( int argc, char *argv[] )
 		fprintf(stderr,"chamada a semget() falhou, impossivel criar o conjunto de semaforos!");
 		exit(1);
 	}
+  if( semop( g_sem_id, g_sem_op2, 1 ) == -1 ) {
+  	fprintf(stderr,"chamada semop() falhou, impossivel inicializar o semaforo!");
+		exit(1);
+	}
   //FREEZANDO AQUI, NAO SEI O PQ AINDA
 	if( semop( g_sem_id, g_sem_op1, 1 ) == -1 ) {
   	fprintf(stderr,"chamada semop() falhou, impossivel inicializar o semaforo!");
@@ -178,7 +182,10 @@ int main( int argc, char *argv[] )
 		exit(1);
 	}
 	*g_shm_addr = 0;
-
+  if( semop( g_sem_id, g_sem_op2, 1 ) == -1 ) {
+  	fprintf(stderr,"chamada semop() falhou, impossivel inicializar o semaforo!");
+		exit(1);
+	}
 	/*
 	 * Pergunta 3: Para que serve essa inicializa��o da mem�ria compartilhada com zero?
 	 */
