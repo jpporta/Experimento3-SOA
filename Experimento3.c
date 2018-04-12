@@ -48,9 +48,8 @@
 *******************************************************************************/
 
 
-/*
+
 #define PROTECT
-*/
 
 
 /*
@@ -158,12 +157,12 @@ int main( int argc, char *argv[] )
   	fprintf(stderr,"chamada semop() falhou, impossivel inicializar o semaforo!");
 		exit(1);
 	}
-  //FREEZANDO AQUI, NAO SEI O PQ AINDA
+
 	if( semop( g_sem_id, g_sem_op1, 1 ) == -1 ) {
   	fprintf(stderr,"chamada semop() falhou, impossivel inicializar o semaforo!");
 		exit(1);
 	}
- printf("Teste\n");
+
 
 	/*
 	 * Pergunta 2: Para que serve esta operacao semop(), se n�o est� na sa�da de uma regi�o cr�tica?
@@ -193,13 +192,13 @@ int main( int argc, char *argv[] )
        /*
         * Criando os filhos
         */
-       rtn = 1;
+       rtn = (int)1;
        for( count = 0; count < NO_OF_CHILDREN; count++ ) {
-               if( rtn != 0 ) {
+               if( (int)rtn != 0 ) {
                        pid[count] = rtn = fork();
                } else {
-                       exit(1);
-                       //ERRO N2: FALTAVA (1) E O PONTO E VIRGULA
+                       break;
+                       //ERRO N2: era exit;
                }
        }
 
@@ -213,7 +212,9 @@ int main( int argc, char *argv[] )
                  */
                 printf("Filho %i comecou ...\n", count);
 
-				PrintChars();
+
+				        PrintChars();
+
 
         } else {
                 usleep(15000);
@@ -221,11 +222,14 @@ int main( int argc, char *argv[] )
                 /*
                  * Matando os filhos
                  */
-                kill(pid[0], SIGKILL);
+                /*kill(pid[0], SIGKILL);
                 kill(pid[1], SIGKILL);
                 kill(pid[2], SIGKILL);
                 kill(pid[3], SIGKILL);
-                kill(pid[4], SIGKILL);
+                kill(pid[4], SIGKILL);*/
+                for(int i = 0; i<NO_OF_CHILDREN;i++){
+                  kill(pid[i], SIGKILL);
+                }
 
                 /*
                  * Removendo a memoria compartilhada
@@ -242,7 +246,7 @@ int main( int argc, char *argv[] )
                         fprintf(stderr,"Impossivel remover o conjunto de semaforos!\n");
                         exit(1);
                 }
-
+                printf("\n");
                 exit(0);
         }
 }
@@ -272,7 +276,7 @@ void PrintChars( void )
 	/*
 	 * Este tempo permite que todos os filhos sejam inciados
 	 */
-	usleep(200);
+	usleep(5000);
 
 	/*
 	 * Entrando no loop principal
@@ -320,11 +324,12 @@ void PrintChars( void )
 		 */
 		for( i = 0; i < number; i++ ) {
 			if( ! (tmp_index + i > sizeof(g_letters_and_numbers)) ) {
-				fprintf(stderr,"%i7", g_letters_and_numbers[tmp_index + i]);
-        //ERRO N3: FPRINTF ESTAVA COM %f AO INVES DE %i, INDICANDO QUE SERIA UM DOUBLE, NAO INTEIRO (O CORRETO)
+				fprintf(stderr,"%c", g_letters_and_numbers[tmp_index + i]);
+        //ERRO N3: FPRINTF ESTAVA COM %f AO INVES DE %c, INDICANDO QUE SERIA UM DOUBLE, NAO O CHAR QUE NÓS QUERIAMOS (O CORRETO)
 				usleep(1);
 			}
 		}
+
 
 		/*
 		 * Atualizando o indice na memoria compartilhada
@@ -346,12 +351,11 @@ void PrintChars( void )
 		 * Liberando o recurso se a macro PROTECT estiver definida
 		 */
 
-#ifdef PROTECT
-		if( semop( g_sem_id, g_sem_op1, 1 ) == -1 ) {
+#ifdef PROTECT //ERRO: ESTAVA ABRINDO NAO FECHANDO
+		if( semop( g_sem_id, g_sem_op2, 1 ) == -1 ) {
                         fprintf(stderr,"chamada semop() falhou, impossivel liberar o recurso!");
                        	exit(1);
                	}
 #endif
-
 	}
 }
