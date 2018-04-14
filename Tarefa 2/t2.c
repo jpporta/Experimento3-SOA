@@ -22,7 +22,7 @@
 *		 semahpores, the character string is displayed neatly to the
 *		 screen.
 *
-*		 The optional semaphore protection can be compiled into the
+*		 The optional semaphore protection can be compiled into them
 *		 program using the MACRO definition of PROTECT.  To compile
 *		 the semaphore protection into the program, uncomment the
 *		 #define below.
@@ -216,12 +216,12 @@ int main( int argc, char *argv[] )
                 printf("Filho %i comecou ...\n", count);
 
                 if(count % 2 == 0){
-                  //produzir
-                  printf("%s\n", "Produzir");
+                  produzir();
+                  //printf("%s\n", "Produzir");
                 }
                 else{
-                  //consumir
-                  printf("%s\n", "Consumir");
+                  consumir();
+                  //printf("%s\n", "Consumir");
                 }
 
 				        //PrintChars();
@@ -335,7 +335,7 @@ void PrintChars( void )
 		 */
 		for( i = 0; i < number; i++ ) {
 			if( ! (tmp_index + i > sizeof(g_letters_and_numbers)) ) {
-				fprintf(stderr,"%c", g_letters_and_numbers[tmp_index + i]);
+				fprintf(stdout,"%c", g_letters_and_numbers[tmp_index + i]);
         //ERRO N3: FPRINTF ESTAVA COM %f AO INVES DE %c, INDICANDO QUE SERIA UM DOUBLE, NAO O CHAR QUE NÓS QUERIAMOS (O CORRETO)
 				usleep(1);
 			}
@@ -372,9 +372,71 @@ void PrintChars( void )
 }
 
 void produzir(){
+  struct timeval tv;
+  int number;
 
+	int tmp_index;
+	int i;
+
+	usleep(5000);
+
+  while(1){
+    if( gettimeofday( &tv, NULL ) == -1 ) {
+			fprintf(stderr,"Impossivel conseguir o tempo atual, terminando.\n");
+			exit(1);
+		}
+		number = ((tv.tv_usec / 47) % 5) + 1;
+
+    tmp_index = *g_shm_addr;
+
+    for( i = 0; i < number; i++ ) {
+			if( ! (tmp_index + i > sizeof(g_letters_and_numbers)) ) {
+				//Colocar no buffer
+        printf("%s\n", "Produzindo");
+				usleep(1);
+			}
+		}
+
+    *g_shm_addr = tmp_index + i;
+
+    if( tmp_index + i > sizeof(g_letters_and_numbers) ) {
+			fprintf(stderr,"\n");
+			*g_shm_addr = 0;
+		}
+  }
 }
 
-void produzir(){
+void consumir(){
+  struct timeval tv;
+  int number;
 
+	int tmp_index;
+	int i;
+
+	usleep(5000);
+
+  while(1){
+    if( gettimeofday( &tv, NULL ) == -1 ) {
+			fprintf(stderr,"Impossivel conseguir o tempo atual, terminando.\n");
+			exit(1);
+		}
+		number = ((tv.tv_usec / 47) % 5) + 1;
+
+    tmp_index = *g_shm_addr;
+
+    for( i = 0; i < number; i++ ) {
+			if( ! (tmp_index + i > sizeof(g_letters_and_numbers)) ) {
+				//Consumir, colocar #
+        printf("%s\n", "Consumindo");
+				usleep(1);
+			}
+		}
+
+    *g_shm_addr = tmp_index + i;
+
+    if( tmp_index + i > sizeof(g_letters_and_numbers) ) {
+			fprintf(stderr,"\n");
+			*g_shm_addr = 0;
+		}
+  }
 }
