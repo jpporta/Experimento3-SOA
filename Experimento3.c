@@ -292,7 +292,7 @@ void PrintChars( void )
 			fprintf(stderr,"Impossivel conseguir o tempo atual, terminando.\n");
 			exit(1);
 		}
-		number = ((tv.tv_usec / 47) % 3) + 1;
+		number = ((tv.tv_usec / 47) % 5) + 1;
 
 		/*
 		 * Pergunta 5: quais os valores poss�veis de serem atribuidos
