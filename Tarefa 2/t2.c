@@ -111,6 +111,8 @@ char g_letters_and_numbers[] = " ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrst
  * Funcoes
  */
 void PrintChars( void );
+void produzir();
+void consumir();
 
 /*
  * Programa Principal
@@ -367,4 +369,12 @@ void PrintChars( void )
                	}
 #endif
 	}
+}
+
+void produzir(){
+
+}
+
+void produzir(){
+  
 }
