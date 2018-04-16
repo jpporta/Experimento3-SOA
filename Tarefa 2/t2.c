@@ -72,12 +72,13 @@
 /*
  * Constantes Necessarias
  */
-#define SEM_KEY_PROD		0x1243
-#define SEM_KEY_CONS		0x1330
-#define SHM_KEY_CONS		0x1400
-#define SHM_KEY_PROD		0x1432
-#define SHM_BUFFER_KEY  0x1496
-#define NO_OF_CHILDREN	8
+// #define SEM_KEY_PROD		0x1243
+// #define SEM_KEY_CONS		0x1086
+#define SHM_BUFFERSP_KEY		0x1332
+#define SHM_KEY_CONS		    0x1400
+#define SHM_KEY_PROD	     	0x1432
+#define SHM_BUFFER_KEY      0x1496
+#define NO_OF_CHILDREN	    8
 
 
 /*
@@ -92,13 +93,16 @@
   //semaforos
 int	g_sem_id_prod;
 int	g_sem_id_cons;
+int g_sem_id_buffer;
   //memoria compartilhada
 int	g_shm_id_prod;
 int	g_shm_id_cons;
 int g_shm_buffer_id;
+int g_shm_buffersp_id;
 //Addresses
 int	*g_shm_addr_prod;
 int *g_shm_addr_cons;
+int *g_shm_buffersp;
 char *g_shm_buffer;
 
 
@@ -136,6 +140,10 @@ int main( int argc, char *argv[] )
        */
       pid_t rtn;
       int count;
+      // Keys
+      key_t key_sem_prod;
+      key_t key_sem_cons;
+      key_t key_sem_buffer;
 
       /*
        * Para armazenar os ids dos processos filhos, permitindo o posterior
@@ -155,14 +163,29 @@ int main( int argc, char *argv[] )
 	g_sem_op2[0].sem_op  =  1;
 	g_sem_op2[0].sem_flg =  0;
 
+
+  //Criando chaves
+  if ((key_sem_prod = ftok("/tmp", 'a')) == (key_t) -1) {
+    perror("IPC error: ftok"); exit(1);
+  }
+  if ((key_sem_cons = ftok("/tmp", 'b')) == (key_t) -1) {
+    perror("IPC error: ftok"); exit(1);
+  }
+  if ((key_sem_buffer = ftok("/tmp", 'c')) == (key_t) -1) {
+    perror("IPC error: ftok"); exit(1);
+  }
 	/*
 	 * Criando o semaforo
 	 */
-  if( ( g_sem_id_prod = semget( SEM_KEY_PROD, 1, IPC_CREAT | 0666 ) ) == -1 ) {
+  if( ( g_sem_id_prod = semget( key_sem_prod, 1, IPC_CREAT | 0666 ) ) == -1 ) {
 		fprintf(stderr,"chamada a semget() falhou, impossivel criar o conjunto de semaforos!");
 		exit(1);
 	}
-  if( ( g_sem_id_cons = semget( SEM_KEY_CONS, 1, IPC_CREAT | 0666 ) ) == -1 ) {
+  if( ( g_sem_id_cons = semget( key_sem_cons, 1, IPC_CREAT | 0666 ) ) == -1 ) {
+		fprintf(stderr,"chamada a semget() falhou, impossivel criar o conjunto de semaforos!");
+		exit(1);
+	}
+  if( ( g_sem_id_buffer = semget( key_sem_buffer, 1, IPC_CREAT | 0666 ) ) == -1 ) {
 		fprintf(stderr,"chamada a semget() falhou, impossivel criar o conjunto de semaforos!");
 		exit(1);
 	}
@@ -185,7 +208,15 @@ int main( int argc, char *argv[] )
   	fprintf(stderr,"chamada semop() falhou, impossivel inicializar o semaforo!");
 		exit(1);
 	}
+  if( semop( g_sem_id_buffer, g_sem_op2, 1 ) == -1 ) {
+  	fprintf(stderr,"chamada semop() falhou, impossivel inicializar o semaforo!");
+		exit(1);
+	}
 
+	if( semop( g_sem_id_buffer, g_sem_op1, 1 ) == -1 ) {
+  	fprintf(stderr,"chamada semop() falhou, impossivel inicializar o semaforo!");
+		exit(1);
+	}
 	/*
 	 * Criando o segmento de memoria compartilhada
 	 */
@@ -216,13 +247,32 @@ int main( int argc, char *argv[] )
 		fprintf(stderr,"Impossivel associar o buffer!\n");
 		exit(1);
 	}
+  //SP
+  if( (g_shm_buffersp_id = shmget( SHM_BUFFERSP_KEY, sizeof(int), IPC_CREAT | 0000)) == -1 ) {
+		fprintf(stderr,"Impossivel criar o buffer!\n");
+		exit(1);
+	}
+	if( (g_shm_buffersp = (int *)shmat(g_shm_buffersp_id, NULL, 0)) == (int *)-1 ) {
+		fprintf(stderr,"Impossivel associar o buffer!\n");
+		exit(1);
+	}
   // INICIALIZANDO
 	*g_shm_addr_prod = 0;
   *g_shm_addr_cons = 0;
-  g_shm_buffer[0] = '\0';
+  *g_shm_buffersp = 0;
+  for(int x = 0; x < 3*strlen(g_letters_and_numbers); x++) g_shm_buffer[x] = (char)0;
+  g_shm_buffer[3*strlen(g_letters_and_numbers)] = '\0';
 
 
   if( semop( g_sem_id_prod, g_sem_op2, 1 ) == -1 ) {
+  	fprintf(stderr,"chamada semop() falhou, impossivel inicializar o semaforo!");
+		exit(1);
+	}
+  if( semop( g_sem_id_cons, g_sem_op2, 1 ) == -1 ) {
+  	fprintf(stderr,"chamada semop() falhou, impossivel inicializar o semaforo!");
+		exit(1);
+	}
+  if( semop( g_sem_id_buffer, g_sem_op2, 1 ) == -1 ) {
   	fprintf(stderr,"chamada semop() falhou, impossivel inicializar o semaforo!");
 		exit(1);
 	}
@@ -266,16 +316,11 @@ int main( int argc, char *argv[] )
 
 
         } else {
-                usleep(100000);
+                usleep(500000);
 
                 /*
                  * Matando os filhos
                  */
-                /*kill(pid[0], SIGKILL);
-                kill(pid[1], SIGKILL);
-                kill(pid[2], SIGKILL);
-                kill(pid[3], SIGKILL);
-                kill(pid[4], SIGKILL);*/
                 for(int i = 0; i<NO_OF_CHILDREN;i++){
                   kill(pid[i], SIGKILL);
                 }
@@ -307,6 +352,10 @@ int main( int argc, char *argv[] )
                         fprintf(stderr,"Impossivel remover o conjunto de semaforos (Consumidor)!\n");
                         exit(1);
                 }
+                if( semctl( g_sem_id_buffer, 0, IPC_RMID, 0) != 0 ) {
+                        fprintf(stderr,"Impossivel remover o conjunto de semaforos (Buffer)!\n");
+                        exit(1);
+                }
 
                 printf("\n");
                 exit(0);
@@ -320,7 +369,7 @@ void produzir(){
 	int tmp_index;
 	int i;
 
-	usleep(5000);
+	usleep(100000);
 
   while(1) {
 
@@ -333,26 +382,26 @@ void produzir(){
   			fprintf(stderr,"Impossivel conseguir o tempo atual, terminando.\n");
   			exit(1);
   		}
-  		//number = ((tv.tv_usec / 47) % 3) + 1;
-      number = ((tv.tv_usec / 42) % 5) + 1; //até 5
+      number = ((tv.tv_usec / 47) % 5) + 1; //até 5
   // INICIO REGIAO CRITICA
   #ifdef PROTECT
   		if( semop( g_sem_id_prod, g_sem_op1, 1 ) == -1 ) {
          	fprintf(stderr,"chamada semop() falhou, impossivel fechar o recurso!");
          	exit(1);
       }
+      if( semop( g_sem_id_buffer, g_sem_op1, 1 ) == -1 ) {
+          fprintf(stderr,"chamada semop() falhou, impossivel fechar o recurso!");
+          exit(1);
+      }
   #endif
 
   		tmp_index = *g_shm_addr_prod;
-
-      char str[number + 1];
-      int z = 0;
+      int sp = *g_shm_buffersp;
   		for( i = 0; i < number; i++ ) {
-  			if( ! (tmp_index + i > sizeof(g_letters_and_numbers)) ) {
-          str[z] =  g_letters_and_numbers[tmp_index + i];
-          z++;
-  				usleep(number);
-  			}
+  			if((tmp_index + i > strlen(g_letters_and_numbers) - 1) ) break;
+        g_shm_buffer[sp] =  g_letters_and_numbers[tmp_index + i];
+        sp++;
+				usleep(number);
   		}
 
 
@@ -362,27 +411,37 @@ void produzir(){
 
   		*g_shm_addr_prod = tmp_index + i;
 
+
   		/*
            	 * Se o indice e maior que o tamanho do alfabeto, exibe um
            	 * caractere return para iniciar a linha seguinte e coloca
            	 * zero no indice
   		 */
-  		if( tmp_index + i > sizeof(g_letters_and_numbers)) {
-        str[z] = '\n';
-        z++;
+  		if( tmp_index + i > strlen(g_letters_and_numbers) - 1) {
+        if(g_shm_buffer[tmp_index + i] != '\0'){
+          g_shm_buffer[tmp_index + i] = '\n';
+          sp++;
+        }
   			*g_shm_addr_prod = 0;
   		}
-      str[z] = '\0';
-      strcat(g_shm_buffer, str);
-      if( tmp_index + i > sizeof(g_letters_and_numbers)) printf("BUFFER = %s\n", g_shm_buffer);
-      printf("Adicionado = ");
-      puts(str);
+      if( g_shm_buffer[tmp_index + i] == '\0'){
+        sp = 0;
+        printf("BUFFERProd = \n%s\n", g_shm_buffer);
+      }
+      *g_shm_buffersp = sp;
+      puts(g_shm_buffer);
+      //printf("Adicionado = ");
+      //puts(str);
   		/*
   		 * Liberando o recurso se a macro PROTECT estiver definida
   		 */
 
   #ifdef PROTECT //ERRO: ESTAVA ABRINDO NAO FECHANDO
   		if( semop( g_sem_id_prod, g_sem_op2, 1 ) == -1 ) {
+        fprintf(stderr,"chamada semop() falhou, impossivel liberar o recurso!");
+       	exit(1);
+     	}
+      if( semop( g_sem_id_buffer, g_sem_op2, 1 ) == -1 ) {
         fprintf(stderr,"chamada semop() falhou, impossivel liberar o recurso!");
        	exit(1);
      	}
@@ -398,8 +457,7 @@ void consumir(){
 	int tmp_index;
 	int i;
 
-	usleep(5000);
-
+	usleep(100000);
   while(1) {
 
   		/*
@@ -411,47 +469,51 @@ void consumir(){
   			fprintf(stderr,"Impossivel conseguir o tempo atual, terminando.\n");
   			exit(1);
   		}
-  		//number = ((tv.tv_usec / 47) % 3) + 1;
-      number = ((tv.tv_usec / 42) % 5) + 1; //até 5
+      number = ((tv.tv_usec / 47) % 5) + 1; //até 5
+
+
   // INICIO REGIAO CRITICA
   #ifdef PROTECT
   		if( semop( g_sem_id_cons, g_sem_op1, 1 ) == -1 ) {
        	fprintf(stderr,"chamada semop() falhou, impossivel fechar o recurso!");
        	exit(1);
      	 }
+       if( semop( g_sem_id_buffer, g_sem_op1, 1 ) == -1 ) {
+        	fprintf(stderr,"chamada semop() falhou, impossivel fechar o recurso!");
+        	exit(1);
+      	 }
   #endif
-
   		tmp_index = *g_shm_addr_cons;
-      if(strlen(g_shm_buffer) > 1){
-    		for( i = 0; i < number; i++ ) {
-    			if( ! (tmp_index + i > sizeof(g_letters_and_numbers)) ) {
-            if(g_shm_buffer[tmp_index + i] != '\0' || g_shm_buffer[tmp_index + i] != '\n')
-              g_shm_buffer[tmp_index + i] =  '#';
-    				usleep(number);
-    			}
-    		}
-    		/*
-    		 * Atualizando o indice na memoria compartilhada
-    		 */
+  		for( i = 0; i < number; i++ ) {
+        if(g_shm_buffer[tmp_index + i] == '\0' || g_shm_buffer[tmp_index + i] == (char)0) break;
+        if(g_shm_buffer[tmp_index + i] != '\n') g_shm_buffer[tmp_index + i] = '#';
+				usleep(number);
+  		}
+  		/*
+  		 * Atualizando o indice na memoria compartilhada
+  		 */
 
-    		*g_shm_addr_cons = tmp_index + i;
+  		*g_shm_addr_cons = tmp_index + i;
 
-    		/*
-             	 * Se o indice e maior que o tamanho do alfabeto, exibe um
-             	 * caractere return para iniciar a linha seguinte e coloca
-             	 * zero no indice
-    		 */
-    		if( tmp_index + i > sizeof(g_letters_and_numbers) ) {
-    			*g_shm_addr_cons = 0;
-          printf("BUFFER = %s\n", g_shm_buffer);
-    		}
-      }
+  		/*
+           	 * Se o indice e maior que o tamanho do alfabeto, exibe um
+           	 * caractere return para iniciar a linha seguinte e coloca
+           	 * zero no indice
+  		 */
+  		if(g_shm_buffer[tmp_index + i] == '\0') {
+  			*g_shm_addr_cons = 0;
+        printf("BUFFER = \n%s\n", g_shm_buffer);
+  		}
   		/*
   		 * Liberando o recurso se a macro PROTECT estiver definida
   		 */
-
+       puts(g_shm_buffer);
   #ifdef PROTECT //ERRO: ESTAVA ABRINDO NAO FECHANDO
   		if( semop( g_sem_id_cons, g_sem_op2, 1 ) == -1 ) {
+        fprintf(stderr,"chamada semop() falhou, impossivel liberar o recurso!");
+       	exit(1);
+     	}
+      if( semop( g_sem_id_buffer, g_sem_op2, 1 ) == -1 ) {
         fprintf(stderr,"chamada semop() falhou, impossivel liberar o recurso!");
        	exit(1);
      	}
