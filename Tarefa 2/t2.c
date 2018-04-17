@@ -260,11 +260,6 @@ int main( int argc, char *argv[] )
 	*g_shm_addr_prod = 0;
   *g_shm_addr_cons = 0;
   *g_shm_buffersp = 0;
-<<<<<<< HEAD
-=======
-  for(int x = 0; x < 3*strlen(g_letters_and_numbers); x++) g_shm_buffer[x] = (char)0;
-  g_shm_buffer[3*strlen(g_letters_and_numbers)] = '\0';
->>>>>>> fda8965962b67d519165fd3878d93d205ab7841f
 
 
   if( semop( g_sem_id_prod, g_sem_op2, 1 ) == -1 ) {
@@ -319,11 +314,7 @@ int main( int argc, char *argv[] )
 
 
         } else {
-<<<<<<< HEAD
-                sleep(2);
-=======
-                usleep(500000);
->>>>>>> fda8965962b67d519165fd3878d93d205ab7841f
+                sleep(1);
 
                 /*
                  * Matando os filhos
@@ -404,7 +395,6 @@ void produzir(){
 
   		tmp_index = *g_shm_addr_prod;
       int sp = *g_shm_buffersp;
-<<<<<<< HEAD
       printf("Adicionado = ");
       for(i = 0; i < number; i++){
         if(g_letters_and_numbers[tmp_index + i] == '\0'){ // Acabou ABC
@@ -432,44 +422,6 @@ void produzir(){
         *g_shm_addr_prod = tmp_index + i;
       }
       /*
-=======
-  		for( i = 0; i < number; i++ ) {
-  			if((tmp_index + i > strlen(g_letters_and_numbers) - 1) ) break;
-        g_shm_buffer[sp] =  g_letters_and_numbers[tmp_index + i];
-        sp++;
-				usleep(number);
-  		}
-
-
-  		/*
-  		 * Atualizando o indice na memoria compartilhada
-  		 */
-
-  		*g_shm_addr_prod = tmp_index + i;
-
-
-  		/*
-           	 * Se o indice e maior que o tamanho do alfabeto, exibe um
-           	 * caractere return para iniciar a linha seguinte e coloca
-           	 * zero no indice
-  		 */
-  		if( tmp_index + i > strlen(g_letters_and_numbers) - 1) {
-        if(g_shm_buffer[tmp_index + i] != '\0'){
-          g_shm_buffer[tmp_index + i] = '\n';
-          sp++;
-        }
-  			*g_shm_addr_prod = 0;
-  		}
-      if( g_shm_buffer[tmp_index + i] == '\0'){
-        sp = 0;
-        printf("BUFFERProd = \n%s\n", g_shm_buffer);
-      }
-      *g_shm_buffersp = sp;
-      puts(g_shm_buffer);
-      //printf("Adicionado = ");
-      //puts(str);
-  		/*
->>>>>>> fda8965962b67d519165fd3878d93d205ab7841f
   		 * Liberando o recurso se a macro PROTECT estiver definida
   		 */
 
@@ -519,7 +471,6 @@ void consumir(){
         	fprintf(stderr,"chamada semop() falhou, impossivel fechar o recurso!");
         	exit(1);
       	 }
-<<<<<<< HEAD
        // if( semop( g_sem_id_prod, g_sem_op1, 1 ) == -1 ) {
        //  	fprintf(stderr,"chamada semop() falhou, impossivel fechar o recurso!");
        //  	exit(1);
@@ -553,37 +504,9 @@ void consumir(){
         tmp_index = 0;
       }
       *g_shm_addr_cons = tmp_index;
-=======
-  #endif
-  		tmp_index = *g_shm_addr_cons;
-  		for( i = 0; i < number; i++ ) {
-        if(g_shm_buffer[tmp_index + i] == '\0' || g_shm_buffer[tmp_index + i] == (char)0) break;
-        if(g_shm_buffer[tmp_index + i] != '\n') g_shm_buffer[tmp_index + i] = '#';
-				usleep(number);
-  		}
->>>>>>> fda8965962b67d519165fd3878d93d205ab7841f
-  		/*
-  		 * Atualizando o indice na memoria compartilhada
-  		 */
-<<<<<<< HEAD
-=======
-
-  		*g_shm_addr_cons = tmp_index + i;
-
-  		/*
-           	 * Se o indice e maior que o tamanho do alfabeto, exibe um
-           	 * caractere return para iniciar a linha seguinte e coloca
-           	 * zero no indice
-  		 */
-  		if(g_shm_buffer[tmp_index + i] == '\0') {
-  			*g_shm_addr_cons = 0;
-        printf("BUFFER = \n%s\n", g_shm_buffer);
-  		}
   		/*
   		 * Liberando o recurso se a macro PROTECT estiver definida
   		 */
-       puts(g_shm_buffer);
->>>>>>> fda8965962b67d519165fd3878d93d205ab7841f
   #ifdef PROTECT //ERRO: ESTAVA ABRINDO NAO FECHANDO
   		if( semop( g_sem_id_cons, g_sem_op2, 1 ) == -1 ) {
         fprintf(stderr,"chamada semop() falhou, impossivel liberar o recurso!");
