@@ -324,7 +324,7 @@ void PrintChars( void )
 		 */
 		for( i = 0; i < number; i++ ) {
 			if( ! (tmp_index + i > sizeof(g_letters_and_numbers)) ) {
-				fprintf(stderr,"%c", g_letters_and_numbers[tmp_index + i]);
+				printf("%c", g_letters_and_numbers[tmp_index + i]);
         //ERRO N3: FPRINTF ESTAVA COM %f AO INVES DE %c, INDICANDO QUE SERIA UM DOUBLE, NAO O CHAR QUE NÓS QUERIAMOS (O CORRETO)
 				usleep(1);
 			}
@@ -343,7 +343,7 @@ void PrintChars( void )
          	 * zero no indice
 		 */
 		if( tmp_index + i > sizeof(g_letters_and_numbers) ) {
-			fprintf(stderr,"\n");
+			printf("\n");
 			*g_shm_addr = 0;
 		}
 
