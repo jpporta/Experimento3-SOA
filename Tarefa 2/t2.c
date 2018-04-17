@@ -47,6 +47,14 @@
 *
 *******************************************************************************/
 
+<<<<<<< HEAD
+=======
+
+
+//#define PROTECT
+
+
+>>>>>>> 52bddb7179fbb18d34277f8f588d42d00c93662c
 /*
  * Includes Necessarios
  */
@@ -362,7 +370,7 @@ void produzir(){
 	int tmp_index;
 	int i;
 
-	usleep(100000);
+	usleep(500000);
 
   while(1) {
 
@@ -441,7 +449,7 @@ void consumir(){
 	int tmp_index;
 	int i;
 
-	usleep(100000);
+	usleep(500000);
   while(1) {
 
   		/*

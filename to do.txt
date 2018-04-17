@@ -1,5 +1,0 @@
-* % para definir consumidor produtor
-* mudar gerador aleatorio para até 5
-* mudar fprintf mostrando char para colocar no buffer
-* indice para consumidor, indice para produtor
-* 
