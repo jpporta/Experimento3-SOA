@@ -47,14 +47,6 @@
 *
 *******************************************************************************/
 
-<<<<<<< HEAD
-=======
-
-
-//#define PROTECT
-
-
->>>>>>> 52bddb7179fbb18d34277f8f588d42d00c93662c
 /*
  * Includes Necessarios
  */
@@ -370,7 +362,7 @@ void produzir(){
 	int tmp_index;
 	int i;
 
-	usleep(500000);
+	usleep(100000);
 
   while(1) {
 
@@ -408,6 +400,7 @@ void produzir(){
             *g_shm_buffersp = 0;
           }
           else{ // Proxima linha
+	    printf("\n");
             g_shm_buffer[sp + i] = '\n';
             *g_shm_buffersp = sp + i + 1;
           }
@@ -449,7 +442,7 @@ void consumir(){
 	int tmp_index;
 	int i;
 
-	usleep(500000);
+	usleep(100000);
   while(1) {
 
   		/*

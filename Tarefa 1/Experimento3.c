@@ -217,7 +217,7 @@ int main( int argc, char *argv[] )
 
 
         } else {
-                usleep(15000);
+                usleep(30000);
 
                 /*
                  * Matando os filhos
@@ -343,7 +343,7 @@ void PrintChars( void )
          	 * zero no indice
 		 */
 		if( tmp_index + i > sizeof(g_letters_and_numbers) ) {
-			printf("\n");
+			fprintf(stderr,"\n");
 			*g_shm_addr = 0;
 		}
 
